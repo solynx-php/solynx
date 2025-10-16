@@ -1,0 +1,19 @@
+{
+    "name": "solynx/solynx",
+    "description": "A modern PHP MVC framework for rapid and elegant web development.",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "app\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Sahim Sakir",
+            "email": "sahimsakir@gmal.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
