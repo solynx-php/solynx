@@ -1,5 +1,5 @@
 {
-    "name": "solynx/solynx",
+    "name": "solynx-php/solynx",
     "description": "A modern PHP MVC framework for rapid and elegant web development.",
     "type": "project",
     "license": "MIT",
