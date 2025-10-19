@@ -33,6 +33,28 @@ class Router
         $this->routes['post'][$path] = $callback;
     }
 
+    public function put($path, $callback)
+    {
+        $this->routes['put'][$path] = $callback;
+    }
+
+    public function delete($path, $callback)
+    {
+        $this->routes['delete'][$path] = $callback;
+    }
+
+    public function patch($path, $callback)
+    {
+        $this->routes['patch'][$path] = $callback;
+    }
+
+    public function options($path, $callback)
+    {
+        $this->routes['options'][$path] = $callback;
+    }
+
+    
+
     public function dispatch()
     {
         $path = $this->request->getPath();
@@ -41,15 +63,21 @@ class Router
         if ($callback == false) {
             $this->response->setStatusCode(404);
             return "404 Not Found";
-        } elseif (is_string($callback)) {
+        } 
+        if (is_string($callback)) {
 
             return $this->renderView($callback);
-        } else {
-            return call_user_func($this->routes[$method][$path]);
         }
+        if (is_array($callback)) {
+            $controller = new $callback[0]();
+            $action = $callback[1];
+            return call_user_func([$controller, $action]);
+        }
+        return call_user_func($callback);
+        
     }
 
-    protected function renderView($view)
+    public function renderView($view)
     {
         $layoutContent = $this->layoutContent();
         $viewContent = $this->renderOnlyView($view);
@@ -57,7 +85,7 @@ class Router
         $viewPath = Application::$ROOT_DIR . "/views/$view.php";
     }
 
-    protected function layoutContent()
+    public function layoutContent()
     {
         $layout = Application::$ROOT_DIR . "/views/layouts/main.aura.php";
         if (file_exists($layout)) {
@@ -68,7 +96,7 @@ class Router
         return "";
     }
 
-    protected function renderOnlyView($view)
+    public function renderOnlyView($view)
     {
         $viewPath = Application::$ROOT_DIR . "/views/$view.aura.php";
         if (file_exists($viewPath)) {
