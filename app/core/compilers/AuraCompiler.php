@@ -2,67 +2,101 @@
 
 namespace app\core\compilers;
 
-class AuraCompiler
+use app\core\views\CompilerInterface;
+use app\core\compilers\Concerns\{
+    CompilesEchos,
+    CompilesConditionals,
+    CompilesLoops,
+    CompilesBlocks,
+    CompilesStacks,
+    CompilesDirectives
+};
+use InvalidArgumentException;
+
+class AuraCompiler implements CompilerInterface
 {
-    public function __construct(private string $cachePath, private string $rootDir)
+    use CompilesEchos,
+        CompilesConditionals,
+        CompilesLoops,
+        CompilesBlocks,
+        CompilesStacks,
+        CompilesDirectives;
+
+    protected string $path = '';
+    protected string $cacheDir;
+    protected string $rootDir;
+
+    public function __construct(string $cacheDir, string $rootDir)
     {
-        if (!is_dir($cachePath)) mkdir($cachePath, 0777, true);
+        $this->cacheDir = rtrim($cacheDir, '/');
+        $this->rootDir  = rtrim($rootDir, '/');
     }
 
-    public function compile(string $viewFile): string
+    /**
+     * Compile a file and return the compiled PHP file path.
+     */
+    public function compile(?string $path = null): string
     {
-        $src = file_get_contents($viewFile);
-        $php = $this->compileStatements($src, $viewFile);
-        $out = $this->cachePath . '/' . md5($viewFile) . '.php';
-        file_put_contents($out, $php);
-        return $out;
+        if (empty($path)) {
+            throw new InvalidArgumentException("Path cannot be empty");
+        }
+
+        $this->path = $path;
+        if (!is_dir($this->cacheDir)) {
+            mkdir($this->cacheDir, 0777, true);
+        }
+
+        $contents = file_get_contents($path);
+        $compiled = $this->compileString($contents);
+
+        $compiledPath = $this->cacheDir . '/' . md5($path) . '.php';
+        file_put_contents($compiledPath, $compiled);
+
+        return $compiledPath;
     }
 
-    private function compileStatements(string $c, string $file): string
+    /**
+     * Compile raw template string.
+     */
+    public function compileString(string $value): string
     {
-        $c = preg_replace('/\{\{\s*(.+?)\s*\}\}/', '<?= htmlspecialchars($1, ENT_QUOTES, "UTF-8") ?>', $c);
-        $c = preg_replace('/\{\!\!\s*(.+?)\s*\!\!\}/', '<?= $1 ?>', $c);
+        $result = '';
 
-        $c = preg_replace('/@if\s*\((.+?)\)/', '<?php if ($1): ?>', $c);
-        $c = preg_replace('/@elseif\s*\((.+?)\)/', '<?php elseif ($1): ?>', $c);
-        $c = str_replace('@else', '<?php else: ?>', $c);
-        $c = str_replace('@endif', '<?php endif; ?>', $c);
+        foreach (token_get_all($value) as $token) {
+            if (is_array($token)) {
+                [$id, $content] = $token;
 
-        $c = preg_replace('/@foreach\s*\((.+?)\)/', '<?php foreach ($1): ?>', $c);
-        $c = str_replace('@endforeach', '<?php endforeach; ?>', $c);
-        $c = preg_replace('/@for\s*\((.+?)\)/', '<?php for ($1): ?>', $c);
-        $c = str_replace('@endfor', '<?php endfor; ?>', $c);
-        $c = preg_replace('/@while\s*\((.+?)\)/', '<?php while ($1): ?>', $c);
-        $c = str_replace('@endwhile', '<?php endwhile; ?>', $c);
+                // Apply echo replacements only to inline HTML parts
+                if ($id === T_INLINE_HTML) {
+                    $content = $this->compileEchos($content);
+                    $content = preg_replace_callback(
+                        '/\B@(\w+)([ \t]*)(\( ( (?>[^()]+) | (?3) )* \))?/x',
+                        fn($m) => $this->compileDirective($m),
+                        $content
+                    );
+                }
 
-        $c = preg_replace('/@block\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?php $__aura->startBlock("$1"); ?>', $c);
-        $c = str_replace('@endblock', '<?php $__aura->endBlock(); ?>', $c);
-        $c = preg_replace(
-            '/@place\s*\(\s*[\'"](.+?)[\'"]\s*(?:,\s*[\'"](.+?)[\'"])?\s*\)/',
-            '<?= $__aura->placeBlock("$1", "$2" ?? ""); ?>',
-            $c
-        );
-        $c = preg_replace('/@layout\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?php $__aura->extendLayout("$1"); ?>', $c);
+                $result .= $content;
+            } else {
+                $result .= $token;
+            }
+        }
 
-        $c = preg_replace(
-            '/@use\s*\(\s*[\'"](.+?)[\'"]\s*(?:,\s*(.+?)\s*)?\)/',
-            '<?php $__aura->use("$1", (isset($2)?$2:[]), get_defined_vars()); ?>',
-            $c
-        );
+        return "<?php /* compiled: {$this->path} */ ?>\n" . $result;
+    }
 
-        $c = preg_replace('/@stack\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?php $__aura->startStack("$1"); ?>', $c);
-        $c = str_replace('@endstack', '<?php $__aura->endStack(); ?>', $c);
-        $c = preg_replace('/@prepend\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?php $__aura->startPrepend("$1"); ?>', $c);
-        $c = str_replace('@endprepend', '<?php $__aura->endPrepend(); ?>', $c);
-        $c = preg_replace('/@pull\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?= $__aura->pull("$1"); ?>', $c);
 
-        $c = preg_replace('/@unique\s*\(\s*[\'"](.+?)[\'"]\s*\)/', '<?php if($__aura->unique("$1")): ?>', $c);
-        $c = str_replace('@endunique', '<?php $__aura->endUnique(); endif; ?>', $c);
+    /**
+     * Call directive-specific compiler if available.
+     */
+    protected function compileDirective(array $match): string
+    {
+        $name = $match[1];
+        $expr = $match[3] ?? '';
+        $method = 'compile' . ucfirst($name);
 
-        $c = str_replace('@php', '<?php', $c);
-        $c = str_replace('@endphp', '?>', $c);
-
-        $banner = "<?php /* compiled: " . addslashes($file) . " */ ?>\n";
-        return $banner . $c;
+        return method_exists($this, $method)
+            ? $this->$method($expr)
+            : $match[0];
     }
 }

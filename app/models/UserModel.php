@@ -39,7 +39,7 @@ class UserModel extends Model
     public function message()
     {
         return [
-            "required" => 'The {field} field is required you fool.',
+            "required" => 'The {field} field is required.',
             "email" => 'The {field} must be a valid email address.',
             "min" => 'The {field} must be at least {min} characters long.',
             "max" => 'The {field} must not exceed {max} characters.',

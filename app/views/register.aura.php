@@ -11,7 +11,7 @@ Registration page
         <div class="invalid-feedback">
             {{ $user->getError('username') }}
         </div>
-    </div> 
+    </div>
 
     <div class="mb-3">
         <label for="exampleInputEmail1" class="form-label">Email address</label>
