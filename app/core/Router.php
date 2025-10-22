@@ -2,6 +2,11 @@
 
 namespace app\core;
 
+use app\core\compilers\AuraCompiler;
+use app\core\exceptions\NotFoundException;
+use app\core\views\AuraView;
+use Error;
+
 /**
  * Class Router
  *
@@ -53,34 +58,36 @@ class Router
         $this->routes['options'][$path] = $callback;
     }
 
-    
+
 
     public function dispatch()
     {
-        $path = $this->request->getPath();
-        $method = $this->request->getMethod();
+        $path = $this->request->path();
+        $method = $this->request->method();
         $callback = $this->routes[$method][$path] ?? false;
-        if ($callback == false) {
-            $this->response->setStatusCode(404);
-            return "404 Not Found";
-        } 
-        if (is_string($callback)) {
+        try {
+            if ($callback == false) {
+                throw new NotFoundException();
+            }
+            if (is_string($callback)) {
 
-            return $this->renderView($callback);
+                return $this->renderView($callback);
+            }
+            if (is_array($callback)) {
+                $controller = new $callback[0]();
+                $action = $callback[1];
+                return call_user_func([$controller, $action], $this->request);
+            }
+            return call_user_func($callback, $this->request);
+        } catch (\Throwable $e) {
+            ErrorHandler::handleException($e);
         }
-        if (is_array($callback)) {
-            $controller = new $callback[0]();
-            $action = $callback[1];
-            return call_user_func([$controller, $action]);
-        }
-        return call_user_func($callback);
-        
     }
 
-    public function renderView($view)
+    public function renderView($view, $params = [])
     {
         $layoutContent = $this->layoutContent();
-        $viewContent = $this->renderOnlyView($view);
+        $viewContent = $this->renderOnlyView($view, $params);
         return str_replace('{{content}}', $viewContent, $layoutContent);
         $viewPath = Application::$ROOT_DIR . "/views/$view.php";
     }
@@ -96,14 +103,33 @@ class Router
         return "";
     }
 
-    public function renderOnlyView($view)
+    public function renderOnlyView($view, $params)
     {
-        $viewPath = Application::$ROOT_DIR . "/views/$view.aura.php";
-        if (file_exists($viewPath)) {
+        foreach ($params as $key => $value) {
+            $$key = $value;
+        }
+
+        $root = Application::$ROOT_DIR;
+        $viewFile = $root . "/views/{$view}.aura.php";
+        $cacheDir = $root . "/../storage/cache";
+
+        $compiler = new AuraCompiler($cacheDir, $root);
+        $__aura   = new AuraView($compiler, $root);
+
+        if (!is_file($viewFile)) return '';
+
+        ob_start();
+        $compiledChild = $compiler->compile($viewFile);
+        include $compiledChild;
+        $childOut = ob_get_clean();
+
+        if ($__aura->hasLayout()) {
+            $layoutFile = $__aura->layoutFile();
             ob_start();
-            include_once $viewPath;
+            $compiledLayout = $compiler->compile($layoutFile);
+            include $compiledLayout;
             return ob_get_clean();
         }
-        return "";
+        return $childOut;
     }
 }

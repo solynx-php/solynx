@@ -3,6 +3,11 @@
     "description": "A modern PHP MVC framework for rapid and elegant web development.",
     "type": "project",
     "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "symfony/console": "^7.3",
+        "monolog/monolog": "^3.9"
+    },
     "autoload": {
         "psr-4": {
             "app\\": "app/"
@@ -14,6 +19,5 @@
             "email": "sahimsakir@gmal.com"
         }
     ],
-    "minimum-stability": "stable",
-    "require": {}
+    "minimum-stability": "stable"
 }

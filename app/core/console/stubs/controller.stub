@@ -1,0 +1,12 @@
+<?php
+
+namespace {{namespace}};
+{{use}}
+
+class {{class}} extends Controller
+{
+    public function index()
+    {
+        // Default method
+    }
+}

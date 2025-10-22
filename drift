@@ -1,29 +1,18 @@
 #!/usr/bin/env php
 <?php
-$argv = $_SERVER['argv'];
-$command = $argv[1] ?? null;
 
-if ($command !== 'run') {
-    echo "Usage: php drift run [--host:port]\n";
-    exit(1);
-}
+define('DRIFT_START', microtime(true));
 
+require __DIR__ . '/vendor/autoload.php';
+$app = require __DIR__ . '/bootstrap/app.php';
 
-$host = '127.0.0.1';
-$port = '8000';
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use app\core\console\Kernel;
 
-if (isset($argv[2]) && str_starts_with($argv[2], '--')) {
-    $arg = substr($argv[2], 2);
-    if (str_contains($arg, ':')) {
-        [$host, $port] = explode(':', $arg, 2);
-    } else {
-        $host = $arg;
-    }
-}
+$kernel = new Kernel();
 
-$publicDir = __DIR__ . '/public';
+$status = $kernel->handle(new ArgvInput(), new ConsoleOutput());
+$kernel->terminate(null, $status);
 
-echo "Starting server at http://{$host}:{$port}\n";
-
-$cmd = sprintf('php -S %s:%s -t "%s"', $host, $port, $publicDir);
-passthru($cmd);
+exit($status);

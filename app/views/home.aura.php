@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solynx - Welcome</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Orbitron:wght@400..900&display=swap');
+
         * {
             margin: 0;
             padding: 0;
@@ -43,7 +46,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: Manrope, sans-serif;
             background: var(--bg-primary);
             min-height: 100vh;
             padding: 40px 20px;
@@ -143,6 +146,7 @@
         }
 
         .logo {
+            font-family: Orbitron, sans-serif;
             font-size: 64px;
             font-weight: 800;
             background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
@@ -308,12 +312,11 @@
 
 <body>
     <button class="theme-toggle" onclick="toggleTheme()">
-        <span class="theme-icon">🌙</span>
-        <span class="theme-text">Dark Mode</span>
+        <span class="theme-icon">☀️</span>
     </button>
 
     <div class="container">
-        <div class="logo">Solynx</div>
+        <div class="logo">SOLYNX</div>
         <div class="tagline">The Elegant PHP Framework for Modern Web Applications</div>
         <div class="version">v1.0.0</div>
 
@@ -365,7 +368,7 @@
         </div>
 
         <div class="footer">
-            Solynx Framework © 2025 | Crafted with passion for developers
+            Solynx Framework © 2025. All rights reserved.
         </div>
     </div>
 
@@ -376,16 +379,13 @@
             isDark = !isDark;
             const body = document.body;
             const themeIcon = document.querySelector('.theme-icon');
-            const themeText = document.querySelector('.theme-text');
 
             if (isDark) {
                 body.classList.remove('light-mode');
-                themeIcon.textContent = '🌙';
-                themeText.textContent = 'Dark Mode';
+                themeIcon.textContent = '☀️';
             } else {
                 body.classList.add('light-mode');
-                themeIcon.textContent = '☀️';
-                themeText.textContent = 'Light Mode';
+                themeIcon.textContent = '🌙';
             }
         }
 

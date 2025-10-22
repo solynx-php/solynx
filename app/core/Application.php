@@ -18,6 +18,7 @@ class Application {
 
     public function __construct($ROOT_DIR) {
         self::$app = $this;
+        ErrorHandler::register();
         self::$ROOT_DIR = $ROOT_DIR;
         $this->request = new Request();
         $this->response = new Response();

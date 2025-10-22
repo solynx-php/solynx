@@ -1,0 +1,9 @@
+<?php
+
+namespace {{namespace}};
+{{use}}
+
+class {{class}} extends Model
+{
+   public $table = {{tableName}};
+}
