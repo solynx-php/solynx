@@ -3,8 +3,9 @@ namespace app\core\console;
 
 use Symfony\Component\Console\Application as ConsoleApp;
 use app\core\console\commands\RunServerCommand;
-use app\core\console\commands\MakeControllerCommand;
-use app\core\console\commands\MakeModelCommand;
+use app\core\console\commands\CreateControllerCommand;
+use app\core\console\commands\CreateModelCommand;
+use app\core\console\commands\MigrateCommand;
 
 class Kernel
 {
@@ -19,8 +20,9 @@ class Kernel
     protected function register(): void
     {
         $this->console->add(new RunServerCommand());
-        $this->console->add(new MakeControllerCommand());
-        $this->console->add(new MakeModelCommand());
+        $this->console->add(new CreateControllerCommand());
+        $this->console->add(new CreateModelCommand());
+        $this->console->add(new MigrateCommand());
     }
 
     public function handle($input, $output)

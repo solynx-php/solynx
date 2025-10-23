@@ -330,7 +330,7 @@
             <div class="feature">
                 <div class="feature-icon">🛠️</div>
                 <div class="feature-title">Developer Friendly</div>
-                <div class="feature-desc">Intuitive syntax and powerful CLI tools make building applications a breeze.</div>
+                <div class="feature-desc">Intuitive syntax and powerful CLI tools Create building applications a breeze.</div>
             </div>
 
             <div class="feature">
