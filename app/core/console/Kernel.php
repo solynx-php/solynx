@@ -4,6 +4,7 @@ namespace app\core\console;
 use Symfony\Component\Console\Application as ConsoleApp;
 use app\core\console\commands\RunServerCommand;
 use app\core\console\commands\CreateControllerCommand;
+use app\core\console\commands\CreateMigrationCommand;
 use app\core\console\commands\CreateModelCommand;
 use app\core\console\commands\MigrateCommand;
 
@@ -23,6 +24,7 @@ class Kernel
         $this->console->add(new CreateControllerCommand());
         $this->console->add(new CreateModelCommand());
         $this->console->add(new MigrateCommand());
+        $this->console->add(new CreateMigrationCommand());
     }
 
     public function handle($input, $output)

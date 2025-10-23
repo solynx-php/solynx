@@ -11,6 +11,6 @@ abstract class Migration {
         Schema::setConnection($db);
     }
 
-    abstract public function up(): void;
-    abstract public function down(): void;
+    abstract public function up();
+    abstract public function down();
 }
