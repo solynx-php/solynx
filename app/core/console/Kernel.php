@@ -7,6 +7,8 @@ use app\core\console\commands\CreateControllerCommand;
 use app\core\console\commands\CreateMigrationCommand;
 use app\core\console\commands\CreateModelCommand;
 use app\core\console\commands\MigrateCommand;
+use app\core\console\commands\MigrateFreshCommand;
+use app\core\console\commands\MigrateStatusCommand;
 
 class Kernel
 {
@@ -25,6 +27,8 @@ class Kernel
         $this->console->add(new CreateModelCommand());
         $this->console->add(new MigrateCommand());
         $this->console->add(new CreateMigrationCommand());
+        $this->console->add(new MigrateStatusCommand());
+        $this->console->add(new MigrateFreshCommand());
     }
 
     public function handle($input, $output)

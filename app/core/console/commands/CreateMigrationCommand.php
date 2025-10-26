@@ -21,11 +21,9 @@ class CreateMigrationCommand extends Command {
         $fileName = "{$timestamp}_{$name}.php";
         $path = dirname(__DIR__, 3) . '/databases/migrations/' . $fileName;
 
-        // Parse class & table name
         $className = $this->generateClassName($name);
         $table = $this->inferTableName($name);
 
-        // Load stub
         $stubPath = dirname(__DIR__) . '/stubs/migration.stub';
         $stub = file_get_contents($stubPath);
 

@@ -8,16 +8,17 @@ use app\core\Database\MigrationRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use ReflectionClass;
 
-class MigrateCommand extends Command
+class MigrateFreshCommand extends Command
 {
-    protected static $defaultName = 'migrate';
+    protected static $defaultName = 'migrate:fresh';
 
     protected function configure(): void
     {
-        $this->setName('migrate')
-            ->setDescription('Run all pending database migrations');
+        $this->setName('migrate:fresh')
+             ->setDescription('Drop all tables and re-run all migrations from scratch');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -29,24 +30,42 @@ class MigrateCommand extends Command
         $repo = new MigrationRepository($db);
         $path = "{$base}/app/databases/migrations";
 
+        // Confirm
+        $helper = $this->getHelper('question');
+        $question = new ConfirmationQuestion(
+            "\n<question>This will DROP all tables. Continue? (Y/n)</question> \n",
+            false
+        );
+        if (!$helper->ask($input, $output, $question)) {
+            $output->writeln("<comment>Operation cancelled.</comment>\n");
+            return Command::SUCCESS;
+        }
+
+        // Disable foreign key checks (for MySQL)
+        $db->exec("SET FOREIGN_KEY_CHECKS=0");
+
+        // Drop all existing tables
+        $tables = $db->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+        foreach ($tables as $table) {
+            $db->exec("DROP TABLE IF EXISTS `$table`");
+        }
+
+        $db->exec("SET FOREIGN_KEY_CHECKS=1");
+        $output->writeln("\n<info>All tables dropped.</info>\n");
+
+        // Recreate migrations table
+        $repo = new MigrationRepository($db);
+        $output->writeln("<info>Running fresh migrations...</info>\n");
+
         $files = glob($path . '/*.php');
         if (empty($files)) {
             $output->writeln("\n<comment>No migration files found.</comment>\n");
             return Command::SUCCESS;
         }
 
-        $batch = $repo->latestBatch() + 1;
-        $newMigrations = 0;
-        $totalFiles = count($files);
-        $migratedFiles = 0;
-
+        $batch = 1;
         foreach ($files as $file) {
             $fileName = basename($file);
-
-            if ($repo->isMigrated($fileName)) {
-                $migratedFiles++;
-                continue;
-            }
 
             $before = get_declared_classes();
             require_once $file;
@@ -63,19 +82,13 @@ class MigrateCommand extends Command
                 if (method_exists($migration, 'up')) {
                     $migration->up();
                     $repo->log($fileName, $batch);
-                    $newMigrations++;
                     $label = "\033[42;97m  MIGRATED  \033[0m";
-                    $output->writeln("\n{$label} {$fileName}\n");
-                } else {
-                    $output->writeln("\n<error>Class {$class} has no up() method</error>\n");
+                    $output->writeln("{$label} {$fileName}");
                 }
             }
         }
 
-        if ($newMigrations === 0 && $migratedFiles === $totalFiles) {
-            $output->writeln("\n<comment>All migrations are already up to date.</comment>\n");
-        }
-
+        $output->writeln("\n<info>Database refreshed successfully.</info>\n");
         return Command::SUCCESS;
     }
 }

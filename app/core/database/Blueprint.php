@@ -44,7 +44,6 @@ class Blueprint
         $lastIndex = count($this->columns) - 1;
         if ($lastIndex >= 0) {
             $col = &$this->columns[$lastIndex];
-            // append UNIQUE only once
             if (!str_contains($col['definition'], 'UNIQUE')) {
                 $col['definition'] .= ' UNIQUE';
             }
