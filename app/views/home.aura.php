@@ -32,19 +32,19 @@
         }
 
         body.light-mode {
-            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --bg-secondary: rgba(255, 255, 255, 0.95);
+            --bg-primary: linear-gradient(135deg, #3f62ad 0%, #394e9f 100%);
+            --bg-secondary: #ffffff;
             --bg-feature: linear-gradient(135deg, #f6f8fb 0%, #ffffff 100%);
-            --bg-feature-hover: #ffffff;
+            --bg-feature-hover: #f0f4ff;
             --text-primary: #2d3748;
-            --text-secondary: #718096;
-            --text-muted: #a0aec0;
-            --border-color: #e2e8f0;
-            --gradient-start: #667eea;
-            --gradient-end: #764ba2;
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --glow-color: rgba(255, 255, 255, 0.1);
+            --text-secondary: #4a5568;
+            --border-color: #cbd5e0;
+            --gradient-start: #32338d;
+            --gradient-end: #3f62ad;
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --glow-color: rgba(63, 98, 173, 0.15);
         }
+
 
         body {
             font-family: Manrope, sans-serif;
