@@ -2,6 +2,8 @@
 
 namespace app\core;
 
+use app\core\database\DB;
+
 abstract class Model
 {
     public const RULE_REQUIRED = 'required';
@@ -23,128 +25,177 @@ abstract class Model
     public const RULE_IMAGE = 'image';
     public const RULE_URL = 'url';
     public const RULE_LENGTH = 'length';
-    public $errors = [];
+    protected array $attributes = [];
 
+    public array $errors = [];
 
-    public function __construct() {}
-
-    public function all($request)
+    public function __construct(array $data = [])
     {
-        foreach ($request as $key => $value) {
-            if (property_exists($this, $key)) {
-                $this->{$key} = $value;
-            }
+        if (!empty($data)) {
+            $this->fill($data);
         }
     }
 
-    public function rules()
+    public function __get($key)
+    {
+        return $this->attributes[$key] ?? null;
+    }
+
+    public function __set($key, $value)
+    {
+        $this->attributes[$key] = $value;
+    }
+
+
+    // Populate model properties from a request
+    public function fill(array $data): static
+    {
+        foreach ($data as $key => $value) {
+            if (!empty($this->fillable) && !in_array($key, $this->fillable, true)) {
+                continue;
+            }
+            $this->{$key} = $value;
+        }
+        return $this;
+    }
+
+
+    public function rules(): array
     {
         return [];
     }
 
-    public function labels()
+    public function labels(): array
     {
         return [];
     }
 
-    public function getLabel($attribute)
+    public function getLabel(string $attribute): string
     {
         return $this->labels()[$attribute] ?? $attribute;
     }
 
-    public function validate()
+    // ----------------------------
+    // VALIDATION LOGIC
+    // ----------------------------
+    public function validate(): bool
     {
         foreach ($this->rules() as $attribute => $rules) {
-            $value = $this->{$attribute};
+            $value = $this->{$attribute} ?? null;
+
             foreach ($rules as $rule) {
-                if ($rule === self::RULE_REQUIRED && !$value) {
+                // Required
+                if ($rule === self::RULE_REQUIRED && ($value === null || $value === '')) {
                     $this->errorMessages($attribute, self::RULE_REQUIRED);
+                    continue;
                 }
-                if ($rule === self::RULE_EMAIL && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+
+                // Email
+                if ($rule === self::RULE_EMAIL && $value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     $this->errorMessages($attribute, self::RULE_EMAIL);
                 }
+
+                // Min length
                 if (is_array($rule) && $rule[0] === self::RULE_MIN) {
-                    $minLength = $rule[1];
-                    if (strlen($value) < $minLength) {
+                    $minLength = (int) $rule[1];
+                    if (strlen((string)($value ?? '')) < $minLength) {
                         $this->errorMessages($attribute, self::RULE_MIN, ['min' => $minLength]);
                     }
                 }
+
+                // Max length
                 if (is_array($rule) && $rule[0] === self::RULE_MAX) {
-                    $maxLength = $rule[1];
-                    if (strlen($value) > $maxLength) {
+                    $maxLength = (int) $rule[1];
+                    if (strlen((string)($value ?? '')) > $maxLength) {
                         $this->errorMessages($attribute, self::RULE_MAX, ['max' => $maxLength]);
                     }
                 }
+
+                // Match
                 if (is_array($rule) && $rule[0] === self::RULE_MATCH) {
                     $matchAttribute = $rule[1];
-                    if ($value !== $this->{$matchAttribute}) {
-                        $this->errorMessages($attribute, self::RULE_MATCH, ['match' => $this->getLabel($matchAttribute)]);
+                    if ($value !== ($this->{$matchAttribute} ?? null)) {
+                        $this->errorMessages($attribute, self::RULE_MATCH, [
+                            'match' => $this->getLabel($matchAttribute)
+                        ]);
                     }
                 }
+
+                // Unique
                 if (is_array($rule) && $rule[0] === self::RULE_UNIQUE) {
                     $className = $rule[1];
                     $uniqueAttribute = $rule[2] ?? $attribute;
-                    $tableName = $className::table;
-                    $existingRecord = Application::$app->db->findOne($tableName, [$uniqueAttribute => $value]);
-                    if ($existingRecord) {
-                        $this->errorMessages($attribute, self::RULE_UNIQUE, ['field' => $this->getLabel($attribute)]);
+                    $tableName = $className::table();
+                    $pdo = DB::pdo();
+                    $stmt = $pdo->prepare("SELECT 1 FROM `$tableName` WHERE `$uniqueAttribute` = ? LIMIT 1");
+                    $stmt->execute([$value]);
+                    if ($stmt->fetchColumn()) {
+                        $this->errorMessages($attribute, self::RULE_UNIQUE, [
+                            'field' => $this->getLabel($attribute)
+                        ]);
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_REGEX) {
+
+                // Regex
+                if (is_array($rule) && $rule[0] === self::RULE_REGEX && $value) {
                     $pattern = $rule[1];
-                    if (!preg_match($pattern, $value)) {
+                    if (!preg_match($pattern, (string) $value)) {
                         $this->errorMessages($attribute, self::RULE_REGEX);
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_IN) {
-                    $allowedValues = $rule[1];
-                    if (!in_array($value, $allowedValues)) {
+
+                // In / Not in
+                if (is_array($rule) && $rule[0] === self::RULE_IN && $value !== null) {
+                    $allowed = $rule[1];
+                    if (!in_array($value, $allowed, true)) {
                         $this->errorMessages($attribute, self::RULE_IN);
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_NOT_IN) {
-                    $disallowedValues = $rule[1];
-                    if (in_array($value, $disallowedValues)) {
+
+                if (is_array($rule) && $rule[0] === self::RULE_NOT_IN && $value !== null) {
+                    $disallowed = $rule[1];
+                    if (in_array($value, $disallowed, true)) {
                         $this->errorMessages($attribute, self::RULE_NOT_IN);
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_DATE) {
+
+                // Date
+                if (is_array($rule) && $rule[0] === self::RULE_DATE && $value) {
                     $format = $rule[1];
                     $d = \DateTime::createFromFormat($format, $value);
                     if (!($d && $d->format($format) === $value)) {
                         $this->errorMessages($attribute, self::RULE_DATE);
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_NUMERIC) {
-                    if (!is_numeric($value)) {
-                        $this->errorMessages($attribute, self::RULE_NUMERIC);
-                    }
+
+                // Numeric / Integer / Float / Boolean / Array
+                if (is_array($rule) && $rule[0] === self::RULE_NUMERIC && $value !== null && !is_numeric($value)) {
+                    $this->errorMessages($attribute, self::RULE_NUMERIC);
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_INTEGER) {
-                    if (!filter_var($value, FILTER_VALIDATE_INT)) {
-                        $this->errorMessages($attribute, self::RULE_INTEGER);
-                    }
+
+                if (is_array($rule) && $rule[0] === self::RULE_INTEGER && $value !== null && !filter_var($value, FILTER_VALIDATE_INT)) {
+                    $this->errorMessages($attribute, self::RULE_INTEGER);
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_FLOAT) {
-                    if (!filter_var($value, FILTER_VALIDATE_FLOAT)) {
-                        $this->errorMessages($attribute, self::RULE_FLOAT);
-                    }
+
+                if (is_array($rule) && $rule[0] === self::RULE_FLOAT && $value !== null && !filter_var($value, FILTER_VALIDATE_FLOAT)) {
+                    $this->errorMessages($attribute, self::RULE_FLOAT);
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_BOOLEAN) {
-                    if (!is_bool($value)) {
-                        $this->errorMessages($attribute, self::RULE_BOOLEAN);
-                    }
+
+                if (is_array($rule) && $rule[0] === self::RULE_BOOLEAN && $value !== null && !is_bool($value)) {
+                    $this->errorMessages($attribute, self::RULE_BOOLEAN);
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_ARRAY) {
-                    if (!is_array($value)) {
-                        $this->errorMessages($attribute, self::RULE_ARRAY);
-                    }
+
+                if (is_array($rule) && $rule[0] === self::RULE_ARRAY && $value !== null && !is_array($value)) {
+                    $this->errorMessages($attribute, self::RULE_ARRAY);
                 }
+
+                // File / Image
                 if (is_array($rule) && $rule[0] === self::RULE_FILE) {
                     if (!isset($_FILES[$attribute]) || $_FILES[$attribute]['error'] !== UPLOAD_ERR_OK) {
                         $this->errorMessages($attribute, self::RULE_FILE);
                     }
                 }
+
                 if (is_array($rule) && $rule[0] === self::RULE_IMAGE) {
                     if (!isset($_FILES[$attribute]) || $_FILES[$attribute]['error'] !== UPLOAD_ERR_OK) {
                         $this->errorMessages($attribute, self::RULE_IMAGE);
@@ -155,43 +206,49 @@ abstract class Model
                         }
                     }
                 }
-                if (is_array($rule) && $rule[0] === self::RULE_URL) {
+
+                // URL
+                if (is_array($rule) && $rule[0] === self::RULE_URL && $value) {
                     if (!filter_var($value, FILTER_VALIDATE_URL)) {
                         $this->errorMessages($attribute, self::RULE_URL);
                     }
                 }
+
+                // Length
                 if (is_array($rule) && $rule[0] === self::RULE_LENGTH) {
-                    $length = strlen($value);
+                    $length = strlen((string)($value ?? ''));
                     $min = $rule[1] ?? null;
                     $max = $rule[2] ?? null;
                     if ($min !== null && $length < $min) {
-                        $this->errorMessages($attribute, self::RULE_LENGTH);
+                        $this->errorMessages($attribute, self::RULE_LENGTH, ['min' => $min]);
                     }
                     if ($max !== null && $length > $max) {
-                        $this->errorMessages($attribute, self::RULE_LENGTH);
+                        $this->errorMessages($attribute, self::RULE_LENGTH, ['max' => $max]);
                     }
                 }
             }
         }
+
         return empty($this->errors);
     }
 
-    public function errorMessages($attribute, $rule, $params = [])
+    // ----------------------------
+    // ERROR HANDLING
+    // ----------------------------
+    public function errorMessages(string $attribute, string $rule, array $params = []): void
     {
-        $messages = $this->message()[$rule] ?? '';
+        $message = $this->message()[$rule] ?? '';
         $label = $this->getLabel($attribute);
-
         $params = array_merge(['field' => $label], $params);
 
         foreach ($params as $key => $value) {
-            $messages = str_replace('{' . $key . '}', $value, $messages);
+            $message = str_replace('{' . $key . '}', (string)$value, $message);
         }
 
-        $this->errors[$attribute][] = $messages;
+        $this->errors[$attribute][] = $message;
     }
 
-
-    public function message()
+    public function message(): array
     {
         return [
             self::RULE_REQUIRED => 'This field is required',
@@ -216,11 +273,15 @@ abstract class Model
         ];
     }
 
-    public function hasError($attribute)
+    // ----------------------------
+    // ERROR HELPERS
+    // ----------------------------
+    public function hasError(string $attribute): bool
     {
         return isset($this->errors[$attribute]);
     }
-    public function getError($attribute)
+
+    public function getError(string $attribute): string
     {
         return $this->errors[$attribute][0] ?? '';
     }

@@ -27,11 +27,16 @@ class AuthController extends Controller
     }
     public function register(Request $request)
     {
-        $user = new UserModel();
+        $user = new UserModel($request->body());
         if ($request->isPost()) {
-            $user->all($request->body());
+            // echo '<pre>';
+            // var_dump($_POST);
+            // echo '</pre>';
+            // exit;
+            // $user->fillAll($request->body());
 
             if ($user->validate()) {
+                $user->save();
                 // Registration successful, redirect or show success message
                 return "Registration successful!";
             }

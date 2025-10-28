@@ -24,7 +24,6 @@ class Router
         $this->response = $response;
     }
 
-    /** HTTP verbs */
     public function get($path, $callback)
     {
         $this->routes['get'][$path]     = $callback;
@@ -50,25 +49,53 @@ class Router
         $this->routes['options'][$path] = $callback;
     }
 
-    /** Main dispatcher */
     public function dispatch()
-    {
-        $path   = $this->request->path();
-        $method = $this->request->method();
-        $callback = $this->routes[$method][$path] ?? false;
+{
+    $path   = $this->request->path();
+    $method = $this->request->method();
+    $callback = $this->routes[$method][$path] ?? false;
 
-        try {
-            if ($callback === false) throw new NotFoundException();
+    try {
+        if ($callback === false) throw new NotFoundException();
 
-            if (is_string($callback)) return $this->renderView($callback);
-            if (is_array($callback))  return call_user_func([new $callback[0](), $callback[1]], $this->request);
-            return call_user_func($callback, $this->request);
-        } catch (Throwable $e) {
-            ErrorHandler::handleException($e);
+        $result = is_string($callback)
+            ? $this->renderView($callback)
+            : (is_array($callback)
+                ? call_user_func([new $callback[0](), $callback[1]], $this->request)
+                : call_user_func($callback, $this->request)
+              );
+
+        // Laravel-style auto-response behavior
+        if ($result instanceof Response) {
+            $result->send();
+            return '';
         }
-    }
 
-    /** Render view with optional layout */
+        if (is_array($result)) {
+            (new Response())->json($result)->send();
+            return '';
+        }
+
+        if (is_string($result)) {
+            (new Response($result, 200, ['Content-Type' => 'text/html']))->send();
+            return '';
+        }
+
+        if (is_object($result) && method_exists($result, 'toArray')) {
+            (new Response())->json($result->toArray())->send();
+            return '';
+        }
+
+        // Default fallback
+        (new Response(json_encode($result)))->send();
+        return '';
+
+    } catch (\Throwable $e) {
+        ErrorHandler::handleException($e);
+    }
+}
+
+
     public function renderView(string $view, array $params = []): string
     {
         $root = Application::$ROOT_DIR;
@@ -82,19 +109,16 @@ class Router
             throw new NotFoundException("View [$viewFile] not found");
         }
 
-        // make all $params available (e.g. $user)
         extract($params, EXTR_SKIP);
 
-        // render child view
         ob_start();
         $compiledChild = $compiler->compile($viewFile);
         include $compiledChild;
         $childOut = ob_get_clean();
 
-        // render layout if defined
         if ($__aura->hasLayout()) {
             $layoutFile = $__aura->layoutFile();
-            extract($params, EXTR_SKIP);          // ensure same variables in layout
+            extract($params, EXTR_SKIP);
             ob_start();
             $compiledLayout = $compiler->compile($layoutFile);
             include $compiledLayout;
@@ -105,7 +129,6 @@ class Router
     }
 
 
-    /** Optional helper for layout content placeholder */
     public function layoutContent(): string
     {
         $layout = Application::$ROOT_DIR . "/views/layouts/main.aura.php";
