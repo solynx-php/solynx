@@ -26,3 +26,8 @@ if (!function_exists('config')) {
         return $cfg->get($key, $default);
     }
 }
+
+function asset(string $path): string {
+    $base = $_ENV['APP_URL'] ?? 'http://localhost';
+    return rtrim($base, '/') . '/' . ltrim($path, '/');
+}

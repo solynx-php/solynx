@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solynx - Welcome</title>
+    <link rel="icon" type="image/svg+xml" href="{{asset('solynx-fav-icon.svg')}}">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Orbitron:wght@400..900&display=swap');
@@ -146,15 +147,12 @@
         }
 
         .logo {
-            font-family: Orbitron, sans-serif;
-            font-size: 64px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
             margin-bottom: 20px;
-            letter-spacing: -2px;
+        }
+
+        .logo img {
+            width: 300px;
+            filter: drop-shadow(0px 0px 10px var(--glow-color));
         }
 
         .tagline {
@@ -178,7 +176,7 @@
 
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
             margin-bottom: 50px;
         }
@@ -316,7 +314,7 @@
     </button>
 
     <div class="container">
-        <div class="logo">SOLYNX</div>
+        <div class="logo"><img src="{{asset('solynx-logo.svg')}}" alt=""></div>
         <div class="tagline">The Elegant PHP Framework for Modern Web Applications</div>
         <div class="version">v1.0.0</div>
 
@@ -345,17 +343,6 @@
                 <div class="feature-desc">Clean MVC structure with modern design patterns for maintainable code.</div>
             </div>
 
-            <div class="feature">
-                <div class="feature-icon">📦</div>
-                <div class="feature-title">Rich Ecosystem</div>
-                <div class="feature-desc">Extensive package library and seamless integration with modern tools.</div>
-            </div>
-
-            <div class="feature">
-                <div class="feature-icon">🌐</div>
-                <div class="feature-title">Modern Stack</div>
-                <div class="feature-desc">Built for PHP 8+ with support for the latest features and technologies.</div>
-            </div>
         </div>
 
         <div class="cta-section">

@@ -18,7 +18,7 @@ class SiteController extends Controller
         $params = [
             'email' => 'sahim@gmail.com'
         ];
-        return $this->render('contact', $params);
+        return $params['email'];
     }
     public function handleContactForm(Request $request)
     {
