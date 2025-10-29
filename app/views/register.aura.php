@@ -31,10 +31,7 @@ Registration page
 
     <div class="mb-3">
         <label for="exampleInputConfirmPassword1" class="form-label">Confirm Password</label>
-        <input type="password" class="form-control {{$user->hasError('confirmpassword') ? ' is-invalid' : ''}}" id="exampleInputConfirmPassword1" name="confirmpassword">
-        <div class="invalid-feedback">
-            {{ $user->getError('confirmpassword') }}
-        </div>
+        <input type="password" class="form-control" id="exampleInputConfirmPassword1" name="confirmpassword">
     </div>
 
     <button type="submit" class="btn btn-primary">Submit</button>

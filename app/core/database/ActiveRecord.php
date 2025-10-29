@@ -4,7 +4,7 @@ namespace app\core\database;
 
 use app\core\Model as BaseModel;
 
-abstract class ActiveRecord extends BaseModel
+abstract class ActiveRecord extends BaseModel implements \JsonSerializable
 {
     protected array $attributes = [];
     protected array $original = [];
@@ -55,7 +55,8 @@ abstract class ActiveRecord extends BaseModel
 
     public static function all()
     {
-        return static::query()->get();
+        $rows = static::query()->get();
+        return new Collection($rows);
     }
 
     public function first(): ?static
@@ -172,7 +173,7 @@ abstract class ActiveRecord extends BaseModel
     }
 
     public function with(string ...$relations): static
-    {        
+    {
         return $this;
     }
 
@@ -299,5 +300,28 @@ abstract class ActiveRecord extends BaseModel
             $out[$k] = ($this->casts[$k] ?? null) === 'json' ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v;
         }
         return $out;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        $data = $this->attributes;
+
+        foreach ($this->hidden as $h) unset($data[$h]);
+
+        foreach (get_object_vars($this) as $key => $val) {
+            if (in_array($key, ['attributes', 'original', 'fillable', 'guarded', 'casts', 'hidden', 'errors', 'primaryKey'])) {
+                continue;
+            }
+            if ($val instanceof self) {
+                $data[$key] = $val->jsonSerialize();
+            } elseif (is_array($val)) {
+                $data[$key] = array_map(
+                    fn($v) => $v instanceof self ? $v->jsonSerialize() : $v,
+                    $val
+                );
+            }
+        }
+
+        return $data;
     }
 }

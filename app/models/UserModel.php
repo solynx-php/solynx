@@ -24,7 +24,7 @@ class UserModel extends Model
                 [self::RULE_MAX, 50]
             ],
             'email'           => [self::RULE_REQUIRED, self::RULE_EMAIL, [self::RULE_MAX, 255], [self::RULE_UNIQUE, self::class, 'email']],
-            'password'        => [self::RULE_REQUIRED, [self::RULE_MIN, 6], [self::RULE_MATCH, 'confirmpassword']],
+            'password'        => [self::RULE_REQUIRED, [self::RULE_MIN, 6]],
         ];
     }
 

@@ -17,6 +17,7 @@ class Router
     protected $request;
     protected $response;
     protected array $routes = [];
+    protected ?string $currentGroupPrefix = null;
 
     public function __construct($request, $response)
     {
@@ -26,28 +27,49 @@ class Router
 
     public function get($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['get'][$path]     = $callback;
     }
     public function post($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['post'][$path]    = $callback;
     }
     public function put($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['put'][$path]     = $callback;
     }
     public function delete($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['delete'][$path]  = $callback;
     }
     public function patch($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['patch'][$path]   = $callback;
     }
     public function options($path, $callback)
     {
+        $path = $this->applyGroupPrefix($path);
         $this->routes['options'][$path] = $callback;
     }
+
+    public function group(string $prefix, callable $callback): void
+    {
+        $previous = $this->currentGroupPrefix;
+        $this->currentGroupPrefix = rtrim(($previous ?? '') . '/' . ltrim($prefix, '/'), '/');
+        $callback($this);
+        $this->currentGroupPrefix = $previous;
+    }
+
+    protected function applyGroupPrefix(string $path): string
+    {
+        $prefix = $this->currentGroupPrefix ? '/' . trim($this->currentGroupPrefix, '/') : '';
+        return rtrim($prefix . '/' . ltrim($path, '/'), '/') ?: '/';
+    }
+
 
     public function dispatch()
     {
@@ -76,7 +98,7 @@ class Router
         if ($data instanceof Response) {
             return $data;
         }
-        
+
         if (is_array($data)) {
             $mapped = array_map(function ($item) {
                 if (is_object($item) && method_exists($item, 'toArray')) {
@@ -131,5 +153,4 @@ class Router
 
         return $childOut;
     }
-
 }

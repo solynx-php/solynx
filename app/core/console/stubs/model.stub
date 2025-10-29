@@ -5,5 +5,10 @@ namespace {{namespace}};
 
 class {{class}} extends Model
 {
-   public $table = {{tableName}};
+   protected static string $table = {{tableName}};
+
+   public static function table(): string
+    {
+      return {{tableName}};
+    }
 }
