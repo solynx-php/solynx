@@ -50,50 +50,54 @@ class Router
     }
 
     public function dispatch()
-{
-    $path   = $this->request->path();
-    $method = $this->request->method();
-    $callback = $this->routes[$method][$path] ?? false;
+    {
+        $path   = $this->request->path();
+        $method = $this->request->method();
+        $callback = $this->routes[$method][$path] ?? false;
 
-    try {
-        if ($callback === false) throw new NotFoundException();
+        try {
+            if ($callback === false) throw new NotFoundException();
 
-        $result = is_string($callback)
-            ? $this->renderView($callback)
-            : (is_array($callback)
-                ? call_user_func([new $callback[0](), $callback[1]], $this->request)
-                : call_user_func($callback, $this->request)
-              );
+            $controllerResponse = match (true) {
+                is_string($callback) => $this->renderView($callback),
+                is_array($callback)  => call_user_func([new $callback[0](), $callback[1]], $this->request),
+                default              => call_user_func($callback, $this->request),
+            };
 
-        // Laravel-style auto-response behavior
-        if ($result instanceof Response) {
-            $result->send();
-            return '';
+            $response = $this->prepareResponse($controllerResponse);
+            $response->send();
+        } catch (Throwable $e) {
+            ErrorHandler::handleException($e);
         }
-
-        if (is_array($result)) {
-            (new Response())->json($result)->send();
-            return '';
-        }
-
-        if (is_string($result)) {
-            (new Response($result, 200, ['Content-Type' => 'text/html']))->send();
-            return '';
-        }
-
-        if (is_object($result) && method_exists($result, 'toArray')) {
-            (new Response())->json($result->toArray())->send();
-            return '';
-        }
-
-        // Default fallback
-        (new Response(json_encode($result)))->send();
-        return '';
-
-    } catch (\Throwable $e) {
-        ErrorHandler::handleException($e);
     }
-}
+
+    protected function prepareResponse($data): Response
+    {
+        if ($data instanceof Response) {
+            return $data;
+        }
+        
+        if (is_array($data)) {
+            $mapped = array_map(function ($item) {
+                if (is_object($item) && method_exists($item, 'toArray')) {
+                    return $item->toArray();
+                }
+                return $item;
+            }, $data);
+            return (new Response())->json($mapped);
+        }
+
+
+        if (is_object($data) && method_exists($data, 'toArray')) {
+            return (new Response())->json($data->toArray());
+        }
+
+        if (is_string($data)) {
+            return new Response($data, 200, ['Content-Type' => 'text/html']);
+        }
+
+        return (new Response())->json($data);
+    }
 
 
     public function renderView(string $view, array $params = []): string
@@ -128,15 +132,4 @@ class Router
         return $childOut;
     }
 
-
-    public function layoutContent(): string
-    {
-        $layout = Application::$ROOT_DIR . "/views/layouts/main.aura.php";
-        if (file_exists($layout)) {
-            ob_start();
-            include $layout;
-            return ob_get_clean();
-        }
-        return '';
-    }
 }

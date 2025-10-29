@@ -27,21 +27,17 @@ class AuthController extends Controller
     }
     public function register(Request $request)
     {
-        $user = new UserModel($request->body());
+        $user = new UserModel();
         if ($request->isPost()) {
-            // echo '<pre>';
-            // var_dump($_POST);
-            // echo '</pre>';
-            // exit;
-            // $user->fillAll($request->body());
+            // $user->fill($request->body());
 
-            if ($user->validate()) {
-                $user->save();
-                // Registration successful, redirect or show success message
-                return "Registration successful!";
-            }
+            // if ($user->validate()) {
+            //     $user->create();
+            //     return "Registration successful!";
+            // }
 
-            // Handle registration logic here
+            $user = UserModel::create($request->body());
+
             return $this->render('register', [
                 'user' => $user
             ]);
@@ -49,12 +45,5 @@ class AuthController extends Controller
         return $this->render('register', [
             'user' => $user
         ]);
-    }
-    public function registerSubmit($request)
-    {
-        $body = $request->body();
-
-        // Handle registration logic here
-        return "Registration form submitted!";
     }
 }

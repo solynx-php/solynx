@@ -15,7 +15,7 @@ class ErrorHandler
 
     public static function handleException(Throwable $e)
     {
-        $status = $e->getCode() ?: 500;
+        $status = (int) ($e->getCode() ?: 500);
         http_response_code($status);
 
         $exceptionClass = get_class($e);

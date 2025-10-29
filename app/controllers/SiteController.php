@@ -16,8 +16,7 @@ class SiteController extends Controller
     public function contact()
     {
         $users = UserModel::all();
-        $data = array_map(fn($user) => $user->toArray(), $users);
-        return json_encode($data, JSON_PRETTY_PRINT);
+        return $users;
     }
     public function handleContactForm(Request $request)
     {

@@ -32,7 +32,7 @@ abstract class ActiveRecord extends BaseModel
         $this->attributes[$k] = $v;
     }
 
-    public function fill(array $data): static
+    public function fill($data): static
     {
         foreach ($data as $k => $v) {
             if ($this->fillable && !in_array($k, $this->fillable, true)) continue;
