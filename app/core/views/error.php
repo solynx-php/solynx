@@ -28,7 +28,7 @@
         }
 
         .error-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3f62ad 0%, #394e9f 100%);
             color: white;
             padding: 2rem 0;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
