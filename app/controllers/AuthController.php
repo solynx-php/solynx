@@ -35,8 +35,13 @@ class AuthController extends Controller
             //     $user->create();
             //     return "Registration successful!";
             // }
+            $request = $request->body();
 
-            $user = UserModel::create($request->body());
+            if ($request['password'] != '') {
+                $request['password'] = password_hash($request['password'], PASSWORD_DEFAULT);
+            }
+
+            $user = UserModel::create($request);
 
             return $this->render('register', [
                 'user' => $user
