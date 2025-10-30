@@ -21,7 +21,7 @@ class MigrateFreshCommand extends Command
              ->setDescription('Drop all tables and re-run all migrations from scratch');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $base = dirname(__DIR__, 4);
         require_once "{$base}/bootstrap/app.php";

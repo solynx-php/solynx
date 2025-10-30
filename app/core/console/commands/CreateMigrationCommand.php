@@ -15,7 +15,8 @@ class CreateMigrationCommand extends Command {
              ->addArgument('name', InputArgument::REQUIRED, 'The name of the migration');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output) {
+    protected function execute(InputInterface $input, OutputInterface $output): int
+     {
         $name = $input->getArgument('name');
         $timestamp = date('Y_m_d_His');
         $fileName = "{$timestamp}_{$name}.php";

@@ -20,7 +20,7 @@ class MigrateCommand extends Command
             ->setDescription('Run all pending database migrations');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $base = dirname(__DIR__, 4);
         require_once "{$base}/bootstrap/app.php";

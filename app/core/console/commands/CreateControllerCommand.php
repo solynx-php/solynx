@@ -17,7 +17,7 @@ class CreateControllerCommand extends Command
              ->addArgument('name', InputArgument::REQUIRED, 'Controller name (e.g. Home or Admin/User)');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = str_replace('\\', '/', $input->getArgument('name'));
         $parts = explode('/', $name);
