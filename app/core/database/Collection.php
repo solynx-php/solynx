@@ -31,7 +31,7 @@ class Collection extends \ArrayObject implements \JsonSerializable
             $this->getArrayCopy()
         );
     }
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return array_map(
             fn($m) => $m instanceof ActiveRecord ? $m->jsonSerialize() : $m,

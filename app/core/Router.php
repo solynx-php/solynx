@@ -108,16 +108,18 @@ class Router
     }
 
 
-    protected function applyGroupPrefix(string $path)
+    protected function applyGroupPrefix(string $path): string
     {
         $prefix = $this->currentGroupPrefix ? '/' . trim($this->currentGroupPrefix, '/') : '';
-        return rtrim($prefix . '/' . ltrim($path, '/'), '/') ?: '/';
+        $full = $prefix . '/' . ltrim($path, '/');
+        return rtrim($full, '/') ?: '/';
     }
+
 
 
     public function dispatch()
     {
-        $path   = $this->request->path();
+        $path = rtrim($this->request->path(), '/') ?: '/';
         $method = $this->request->method();
         $callback = false;
         $params = [];

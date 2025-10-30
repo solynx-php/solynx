@@ -14,7 +14,8 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
     protected array $hidden = [];
     protected string $primaryKey = 'id';
 
-    public static function table(){
+    public static function table()
+    {
         return static::$table;
     }
 
@@ -97,11 +98,16 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return static::table();
     }
 
-    public function where(string $col, string $op, $val): static
+    public static function where(string $col, $op = null, $val = null): QueryBuilder
     {
-        static::query()->where($col, $op, $val);
-        return $this;
+        if (func_num_args() === 2) {
+            $val = $op;
+            $op = '=';
+        }
+
+        return static::query()->where($col, $op, $val);
     }
+
 
     public function orWhere(string $col, string $op, $val): static
     {
@@ -176,8 +182,22 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
 
     public function with(string ...$relations): static
     {
+        foreach ($relations as $relation) {
+            if (method_exists($this, $relation)) {
+                $related = $this->$relation();
+                if ($related instanceof self) {
+                    $this->$relation = $related;
+                } elseif (is_array($related)) {
+                    $this->$relation = array_map(
+                        fn($r) => $r instanceof self ? $r : $r,
+                        $related
+                    );
+                }
+            }
+        }
         return $this;
     }
+
 
     public function save()
     {

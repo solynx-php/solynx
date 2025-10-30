@@ -3,7 +3,6 @@
 namespace app\controllers\Post;
 use app\controllers\Controller;
 use app\models\Post\PostModel;
-use app\core\Application;
 
 class PostController extends Controller
 {
@@ -15,6 +14,6 @@ class PostController extends Controller
 
     public function show($request, $id)
     {
-        return ['id' => $id, 'request' => $request->ip()];
+        return PostModel::where('user_id', $id)->with('users')->first();
     }
 }
