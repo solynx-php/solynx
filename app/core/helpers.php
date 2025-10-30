@@ -3,11 +3,6 @@
 use app\core\Config;
 
 if (!function_exists('config')) {
-    /**
-     * Get or set config values.
-     * config('db.host') -> get
-     * config(['db.host' => '127.0.0.1']) -> set
-     */
     function config(string|array $key = null, $default = null)
     {
         $cfg = Config::instance();
