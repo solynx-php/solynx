@@ -4,7 +4,7 @@ namespace app\core\compilers\concerns;
 
 trait CompilesEchos
 {
-    protected function compileEchos(string $c): string
+    protected function compileEchos(string $c)
     {
         $c = preg_replace('/\{\{\s*(.+?)\s*\}\}/', '<?= htmlspecialchars($1, ENT_QUOTES, "UTF-8") ?>', $c);
         $c = preg_replace('/\{\!\!\s*(.+?)\s*\!\!\}/', '<?= $1 ?>', $c);

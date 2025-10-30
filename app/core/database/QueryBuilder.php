@@ -42,7 +42,7 @@ class QueryBuilder
     public function take(int $n): self { $this->limit = $n; return $this; }
     public function skip(int $n): self { $this->offset = $n; return $this; }
 
-    private function sql(): string {
+    private function sql() {
         $select = 'SELECT '.implode(',',$this->select).' FROM `'.$this->table.'`';
         $where = '';
         if ($this->wheres){
@@ -56,7 +56,7 @@ class QueryBuilder
         return $select.$where.$order.$limit.$offset;
     }
 
-    public function get(): array {
+    public function get() {
         $stmt = $this->pdo->prepare($this->sql());
         $stmt->execute($this->bindings);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -78,7 +78,7 @@ class QueryBuilder
         return $m;
     }
 
-    public function count(): int {
+    public function count() {
         $orig = $this->select;
         $this->select = ['COUNT(*) AS c'];
         $stmt = $this->pdo->prepare($this->sql());

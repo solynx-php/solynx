@@ -20,30 +20,30 @@ class AuraView
 
     public function __construct(private AuraCompiler $compiler, private string $rootDir) {}
 
-    public function extendLayout(string $name): void
+    public function extendLayout(string $name)
     {
         $this->layout = $name;
     }
-    public function hasLayout(): bool
+    public function hasLayout()
     {
         return $this->layout !== null;
     }
-    public function layoutFile(): string
+    public function layoutFile()
     {
         return $this->rootDir . "/views/layouts/{$this->layout}.aura.php";
     }
 
-    public function startBlock(string $name): void
+    public function startBlock(string $name)
     {
         $this->blockStack[] = $name;
         ob_start();
     }
-    public function endBlock(): void
+    public function endBlock()
     {
         $name = array_pop($this->blockStack);
         $this->blocks[$name] = ob_get_clean();
     }
-    public function placeBlock(string $name, string $default = ''): string
+    public function placeBlock(string $name, string $default = '')
     {
         if (array_key_exists($name, $this->blocks)) {
             return $this->blocks[$name];
@@ -56,7 +56,7 @@ class AuraView
         return $default;
     }
 
-    public function use(string $view, array $with = [], array $scope = []): void
+    public function use(string $view, array $with = [], array $scope = [])
     {
         extract($scope, EXTR_SKIP);
         foreach ($with as $k => $v) {
@@ -69,40 +69,40 @@ class AuraView
         include $compiled;
     }
 
-    public function startStack(string $name): void
+    public function startStack(string $name)
     {
         $this->stackBuffer[] = $name;
         ob_start();
     }
-    public function endStack(): void
+    public function endStack()
     {
         $name = array_pop($this->stackBuffer);
         $this->stacks[$name][] = ob_get_clean();
     }
-    public function startPrepend(string $name): void
+    public function startPrepend(string $name)
     {
         $this->prependBuffer[] = $name;
         ob_start();
     }
-    public function endPrepend(): void
+    public function endPrepend()
     {
         $name = array_pop($this->prependBuffer);
         array_unshift($this->stacks[$name], ob_get_clean());
     }
-    public function pull(string $name): string
+    public function pull(string $name)
     {
         $items = $this->stacks[$name] ?? [];
         return implode("", $items);
     }
 
-    public function unique(string $key): bool
+    public function unique(string $key)
     {
         if (!empty($this->onceKeys[$key])) return false;
         $this->onceKeys[$key] = true;
         $this->onceStack[] = $key;
         return true;
     }
-    public function endUnique(): void
+    public function endUnique()
     {
         array_pop($this->onceStack);
     }

@@ -10,14 +10,14 @@ class RunServerCommand extends Command
 {
     protected static $defaultName = 'run';
 
-    protected function configure(): void
+    protected function configure()
     {
         $this->setName('run')
              ->setDescription('Start PHP development server')
              ->addArgument('host', InputArgument::OPTIONAL, 'Host:Port', '127.0.0.1:8000');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         [$host, $port] = explode(':', $input->getArgument('host') . ':8000');
         $publicDir = dirname(__DIR__, 4) . '/public';

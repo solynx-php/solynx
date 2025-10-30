@@ -33,7 +33,7 @@ class Config
         return $cursor;
     }
 
-    public function set(string $key, $value): void
+    public function set(string $key, $value)
     {
         $ref = &$this->data;
         $parts = explode('.', $key);
@@ -46,12 +46,12 @@ class Config
         $ref = $value;
     }
 
-    public function all(): array
+    public function all()
     {
         return $this->data;
     }
 
-    public static function reload(): void
+    public static function reload()
     {
         self::$instance = null;
     }

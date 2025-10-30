@@ -204,7 +204,7 @@ class Blueprint
     // ------------------------------------
     // COMPILE SQL
     // ------------------------------------
-    public function toSql(): string
+    public function toSql()
     {
         $parts = $this->columns;
 

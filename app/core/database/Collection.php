@@ -24,14 +24,14 @@ class Collection extends \ArrayObject implements \JsonSerializable
         return $this;
     }
 
-    public function toArray(): array
+    public function toArray()
     {
         return array_map(
             fn($m) => method_exists($m, 'toArray') ? $m->toArray() : $m,
             $this->getArrayCopy()
         );
     }
-    public function jsonSerialize(): array
+    public function jsonSerialize()
     {
         return array_map(
             fn($m) => $m instanceof ActiveRecord ? $m->jsonSerialize() : $m,

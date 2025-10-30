@@ -4,6 +4,11 @@ namespace app\core;
 
 class Request
 {
+    public function ip()
+    {
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    }
+
     public function path()
     {
         $path = $_SERVER['REQUEST_URI'] ?? '/';

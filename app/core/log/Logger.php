@@ -28,15 +28,15 @@ class Logger {
         return self::$logger;
     }
 
-    public static function info(string $message, array $context = []): void {
+    public static function info(string $message, array $context = []) {
         self::getLogger()->info($message, $context);
     }
 
-    public static function error(string $message, array $context = []): void {
+    public static function error(string $message, array $context = []) {
         self::getLogger()->error($message, $context);
     }
 
-    public static function debug(string $message, array $context = []): void {
+    public static function debug(string $message, array $context = []) {
         self::getLogger()->debug($message, $context);
     }
 }

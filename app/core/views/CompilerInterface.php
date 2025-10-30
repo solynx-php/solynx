@@ -6,10 +6,10 @@ interface CompilerInterface
     /**
      * Compile a file and return the compiled PHP path.
      */
-    public function compile(?string $path = null): string;
+    public function compile(?string $path = null);
 
     /**
      * Compile a raw template string.
      */
-    public function compileString(string $value): string;
+    public function compileString(string $value);
 }

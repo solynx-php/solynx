@@ -7,7 +7,7 @@ class {{class}} extends Model
 {
    protected static string $table = {{tableName}};
 
-   public static function table(): string
+   public static function table()
     {
       return {{tableName}};
     }

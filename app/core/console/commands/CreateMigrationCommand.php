@@ -9,13 +9,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 class CreateMigrationCommand extends Command {
     protected static $defaultName = 'create:migration';
 
-    protected function configure(): void {
+    protected function configure() {
         $this->setName(self::$defaultName)
              ->setDescription('Create a new migration file')
              ->addArgument('name', InputArgument::REQUIRED, 'The name of the migration');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int {
+    protected function execute(InputInterface $input, OutputInterface $output) {
         $name = $input->getArgument('name');
         $timestamp = date('Y_m_d_His');
         $fileName = "{$timestamp}_{$name}.php";
@@ -39,13 +39,13 @@ class CreateMigrationCommand extends Command {
         return Command::SUCCESS;
     }
 
-    private function generateClassName(string $name): string {
+    private function generateClassName(string $name) {
         $parts = explode('_', $name);
         $parts = array_map('ucfirst', $parts);
         return implode('', $parts);
     }
 
-    private function inferTableName(string $name): string {
+    private function inferTableName(string $name) {
         if (preg_match('/create_(.*?)_table/', $name, $m)) {
             return $m[1];
         }

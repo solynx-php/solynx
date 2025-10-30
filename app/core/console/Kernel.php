@@ -20,7 +20,7 @@ class Kernel
         $this->register();
     }
 
-    protected function register(): void
+    protected function register()
     {
         $this->console->add(new RunServerCommand());
         $this->console->add(new CreateControllerCommand());
@@ -36,5 +36,5 @@ class Kernel
         return $this->console->run($input, $output);
     }
 
-    public function terminate($input, $status): void {}
+    public function terminate($input, $status) {}
 }

@@ -10,14 +10,14 @@ class CreateModelCommand extends Command
 {
     protected static $defaultName = 'create:model';
 
-    protected function configure(): void
+    protected function configure()
     {
         $this->setName('create:model')
              ->setDescription('Create a model from stub')
              ->addArgument('name', InputArgument::REQUIRED, 'Model name (e.g. Home or Admin/User)');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $name = str_replace('\\', '/', $input->getArgument('name'));
         $parts = explode('/', $name);

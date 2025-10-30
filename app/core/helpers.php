@@ -22,7 +22,7 @@ if (!function_exists('config')) {
     }
 }
 
-function asset(string $path): string {
+function asset(string $path) {
     $base = $_ENV['APP_URL'] ?? 'http://localhost';
     return rtrim($base, '/') . '/' . ltrim($path, '/');
 }

@@ -4,7 +4,7 @@ namespace app\core;
 
 class Env
 {
-    public static function load(string $path): void
+    public static function load(string $path)
     {
         if (!file_exists($path)) {
             throw new \RuntimeException(".env file not found at: {$path}");

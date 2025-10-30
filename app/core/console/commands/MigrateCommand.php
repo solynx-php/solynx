@@ -14,13 +14,13 @@ class MigrateCommand extends Command
 {
     protected static $defaultName = 'migrate';
 
-    protected function configure(): void
+    protected function configure()
     {
         $this->setName('migrate')
             ->setDescription('Run all pending database migrations');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $base = dirname(__DIR__, 4);
         require_once "{$base}/bootstrap/app.php";

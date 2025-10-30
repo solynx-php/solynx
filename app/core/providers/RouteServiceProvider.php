@@ -6,7 +6,7 @@ use app\core\Application;
 use app\core\Router;
 
 class RouteServiceProvider {
-    public static function registerRoutes(Application $app): void {
+    public static function registerRoutes(Application $app) {
         $router = $app->router;
 
         (function (Router $router) {

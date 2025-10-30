@@ -8,7 +8,7 @@ class PostModel extends Model
 {
    protected static string $table = 'posts';
 
-   public static function table(): string
+   public static function table()
     {
       return 'posts';
     }

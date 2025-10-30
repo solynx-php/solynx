@@ -15,13 +15,13 @@ class MigrateFreshCommand extends Command
 {
     protected static $defaultName = 'migrate:fresh';
 
-    protected function configure(): void
+    protected function configure()
     {
         $this->setName('migrate:fresh')
              ->setDescription('Drop all tables and re-run all migrations from scratch');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
         $base = dirname(__DIR__, 4);
         require_once "{$base}/bootstrap/app.php";

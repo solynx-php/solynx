@@ -35,7 +35,7 @@ class AuraCompiler implements CompilerInterface
     /**
      * Compile a file and return the compiled PHP file path.
      */
-    public function compile(?string $path = null): string
+    public function compile(?string $path = null)
     {
         if (empty($path)) {
             throw new InvalidArgumentException("Path cannot be empty");
@@ -58,7 +58,7 @@ class AuraCompiler implements CompilerInterface
     /**
      * Compile raw template string.
      */
-    public function compileString(string $value): string
+    public function compileString(string $value)
     {
         $result = '';
 
@@ -89,7 +89,7 @@ class AuraCompiler implements CompilerInterface
     /**
      * Call directive-specific compiler if available.
      */
-    protected function compileDirective(array $match): string
+    protected function compileDirective(array $match)
     {
         $name = $match[1];
         $expr = $match[3] ?? '';

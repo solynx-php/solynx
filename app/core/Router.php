@@ -17,6 +17,8 @@ class Router
     protected $request;
     protected $response;
     protected array $routes = [];
+    protected array $namedRoutes = [];
+    protected ?string $currentGroupNamePrefix = null;
     protected ?string $currentGroupPrefix = null;
     protected array $currentGroupOptions = [];
 
@@ -30,53 +32,83 @@ class Router
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['get'][$path]     = $callback;
+        return $this;
     }
     public function post($path, $callback)
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['post'][$path]    = $callback;
+        return $this;
     }
     public function put($path, $callback)
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['put'][$path]     = $callback;
+        return $this;
     }
     public function delete($path, $callback)
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['delete'][$path]  = $callback;
+        return $this;
     }
     public function patch($path, $callback)
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['patch'][$path]   = $callback;
+        return $this;
     }
     public function options($path, $callback)
     {
         $path = $this->applyGroupPrefix($path);
         $this->routes['options'][$path] = $callback;
+        return $this;
+    }
+    public function name(string $name): self
+    {
+        $lastMethod = array_key_last($this->routes);
+        if (!$lastMethod) return $this;
+
+        $lastPath = array_key_last($this->routes[$lastMethod]);
+        if (!$lastPath) return $this;
+
+        $prefix = $this->currentGroupNamePrefix ?? '';
+        $fullName = $prefix . $name;
+
+        $this->namedRoutes[$fullName] = [
+            'method' => $lastMethod,
+            'path' => $lastPath,
+            'handler' => $this->routes[$lastMethod][$lastPath]
+        ];
+
+        return $this;
     }
 
-    public function group(array|string $attributes, callable $callback): void
+    public function group(array|string $attributes, callable $callback)
     {
         if (is_string($attributes)) {
             $attributes = ['prefix' => $attributes];
         }
 
-        $previousOptions = $this->currentGroupOptions;
-        $this->currentGroupOptions = array_merge($this->currentGroupOptions, $attributes);
-
         $previousPrefix = $this->currentGroupPrefix;
-        $prefix = $attributes['prefix'] ?? '';
-        $this->currentGroupPrefix = rtrim(($previousPrefix ? $previousPrefix . '/' : '') . ltrim($prefix, '/'), '/');
+        $previousNamePrefix = $this->currentGroupNamePrefix ?? '';
+
+        $this->currentGroupPrefix = isset($attributes['prefix'])
+            ? rtrim(($previousPrefix ? $previousPrefix . '/' : '') . ltrim($attributes['prefix'], '/'), '/')
+            : $previousPrefix;
+
+        $this->currentGroupNamePrefix = isset($attributes['as'])
+            ? $previousNamePrefix . $attributes['as']
+            : $previousNamePrefix;
 
         $callback($this);
 
         $this->currentGroupPrefix = $previousPrefix;
-        $this->currentGroupOptions = $previousOptions;
+        $this->currentGroupNamePrefix = $previousNamePrefix;
     }
 
-    protected function applyGroupPrefix(string $path): string
+
+    protected function applyGroupPrefix(string $path)
     {
         $prefix = $this->currentGroupPrefix ? '/' . trim($this->currentGroupPrefix, '/') : '';
         return rtrim($prefix . '/' . ltrim($path, '/'), '/') ?: '/';
@@ -87,22 +119,72 @@ class Router
     {
         $path   = $this->request->path();
         $method = $this->request->method();
-        $callback = $this->routes[$method][$path] ?? false;
+        $callback = false;
+        $params = [];
+
+        if (isset($this->routes[$method])) {
+            foreach ($this->routes[$method] as $route => $handler) {
+                $pattern = preg_replace('#\{[^/]+\}#', '([^/]+)', $route);
+                if (preg_match("#^{$pattern}$#", $path, $matches)) {
+                    array_shift($matches);
+                    $callback = $handler;
+                    $params = $matches;
+                    break;
+                }
+            }
+        }
 
         try {
-            if ($callback === false) throw new NotFoundException();
+            if ($callback === false) {
+                throw new NotFoundException();
+            }
 
             $controllerResponse = match (true) {
                 is_string($callback) => $this->renderView($callback),
-                is_array($callback)  => call_user_func([new $callback[0](), $callback[1]], $this->request),
-                default              => call_user_func($callback, $this->request),
+
+                is_array($callback)  => $this->callController($callback, $params),
+
+                default              => call_user_func_array($callback, $params),
             };
+
+
 
             $response = $this->prepareResponse($controllerResponse);
             $response->send();
         } catch (Throwable $e) {
             ErrorHandler::handleException($e);
         }
+    }
+    protected function callController(array $callback, array $params)
+    {
+        [$class, $method] = $callback;
+        $controller = new $class();
+
+        $ref = new \ReflectionMethod($controller, $method);
+        $expectsRequest = false;
+        if ($ref->getNumberOfParameters() > 0) {
+            $firstParam = $ref->getParameters()[0];
+            $expectsRequest = $firstParam->getName() === 'request';
+        }
+
+        $args = $expectsRequest
+            ? array_merge([$this->request], $params)
+            : $params;
+
+        return call_user_func_array([$controller, $method], $args);
+    }
+
+    public function route(string $name, array $params = []): ?string
+    {
+        if (!isset($this->namedRoutes[$name])) {
+            return null;
+        }
+
+        $path = $this->namedRoutes[$name]['path'];
+        foreach ($params as $key => $value) {
+            $path = str_replace("{{$key}}", $value, $path);
+        }
+        return $path;
     }
 
     protected function prepareResponse($data): Response
@@ -134,7 +216,7 @@ class Router
     }
 
 
-    public function renderView(string $view, array $params = []): string
+    public function renderView(string $view, array $params = [])
     {
         $root = Application::$ROOT_DIR;
         $cacheDir = "$root/../storage/cache";

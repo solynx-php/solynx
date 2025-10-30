@@ -14,7 +14,9 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
     protected array $hidden = [];
     protected string $primaryKey = 'id';
 
-    abstract public static function table(): string;
+    public static function table(){
+        return static::$table;
+    }
 
     public function __construct(array $data = [])
     {
@@ -65,7 +67,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $results[0] ?? null;
     }
 
-    public function get(): array
+    public function get()
     {
         return static::query()->where($this->primaryKey, '=', $this->attributes[$this->primaryKey] ?? 0)->get();
     }
@@ -90,7 +92,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $instance;
     }
 
-    public static function tableName(): string
+    public static function tableName()
     {
         return static::table();
     }
@@ -131,7 +133,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $this;
     }
 
-    public static function count(): int
+    public static function count()
     {
         $pdo = DB::pdo();
         $stmt = $pdo->prepare("SELECT COUNT(*) as cnt FROM `" . static::table() . "`");
@@ -157,7 +159,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $this->refresh();
     }
 
-    public function touch(): bool
+    public function touch()
     {
         $now = date('Y-m-d H:i:s');
         $this->attributes['updated_at'] = $now;
@@ -177,7 +179,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $this;
     }
 
-    public function save(): bool
+    public function save()
     {
         if (method_exists($this, 'rules') && !$this->validate()) return false;
 
@@ -203,13 +205,13 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $ok;
     }
 
-    public function update(array $attrs): bool
+    public function update(array $attrs)
     {
         $this->fill($attrs);
         return $this->save();
     }
 
-    public static function destroy($id): bool
+    public static function destroy($id)
     {
         $instance = static::find($id);
         if ($instance) {
@@ -218,17 +220,17 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return false;
     }
 
-    public function exists(): bool
+    public function exists()
     {
         return isset($this->attributes[$this->primaryKey]);
     }
 
-    public function isDirty(): bool
+    public function isDirty()
     {
         return $this->attributes !== $this->original;
     }
 
-    public function isClean(): bool
+    public function isClean()
     {
         return !$this->isDirty();
     }
@@ -241,7 +243,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
         return $this->original[$key] ?? null;
     }
 
-    public function getChanges(): array
+    public function getChanges()
     {
         $changes = [];
         foreach ($this->attributes as $k => $v) {
@@ -254,14 +256,14 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
 
 
 
-    public function delete(): bool
+    public function delete()
     {
         $pdo = DB::pdo();
         $stmt = $pdo->prepare("DELETE FROM `" . static::table() . "` WHERE `{$this->primaryKey}`=?");
         return $stmt->execute([$this->attributes[$this->primaryKey]]);
     }
 
-    public function toArray(): array
+    public function toArray()
     {
         $a = $this->attributes;
         foreach ($this->hidden as $h) unset($a[$h]);
@@ -293,7 +295,7 @@ abstract class ActiveRecord extends BaseModel implements \JsonSerializable
             default => $v,
         };
     }
-    private function castOut(array $data): array
+    private function castOut(array $data)
     {
         $out = [];
         foreach ($data as $k => $v) {

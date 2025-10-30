@@ -52,7 +52,7 @@ class Response
         return $this;
     }
 
-    public function send(): void
+    public function send()
     {
         http_response_code($this->status);
         foreach ($this->headers as $key => $value) {
@@ -61,7 +61,7 @@ class Response
         echo $this->content;
     }
 
-    public function getContent(): string
+    public function getContent()
     {
         return (string) $this->content;
     }

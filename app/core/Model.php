@@ -60,17 +60,17 @@ abstract class Model
     }
 
 
-    public function rules(): array
+    public function rules()
     {
         return [];
     }
 
-    public function labels(): array
+    public function labels()
     {
         return [];
     }
 
-    public function getLabel(string $attribute): string
+    public function getLabel(string $attribute)
     {
         return $this->labels()[$attribute] ?? $attribute;
     }
@@ -78,7 +78,7 @@ abstract class Model
     // ----------------------------
     // VALIDATION LOGIC
     // ----------------------------
-    public function validate(): bool
+    public function validate()
     {
         foreach ($this->rules() as $attribute => $rules) {
             $value = $this->{$attribute} ?? null;
@@ -235,7 +235,7 @@ abstract class Model
     // ----------------------------
     // ERROR HANDLING
     // ----------------------------
-    public function errorMessages(string $attribute, string $rule, array $params = []): void
+    public function errorMessages(string $attribute, string $rule, array $params = [])
     {
         $message = $this->message()[$rule] ?? '';
         $label = $this->getLabel($attribute);
@@ -248,7 +248,7 @@ abstract class Model
         $this->errors[$attribute][] = $message;
     }
 
-    public function message(): array
+    public function message()
     {
         return [
             self::RULE_REQUIRED => 'This field is required',
@@ -276,12 +276,12 @@ abstract class Model
     // ----------------------------
     // ERROR HELPERS
     // ----------------------------
-    public function hasError(string $attribute): bool
+    public function hasError(string $attribute)
     {
         return isset($this->errors[$attribute]);
     }
 
-    public function getError(string $attribute): string
+    public function getError(string $attribute)
     {
         return $this->errors[$attribute][0] ?? '';
     }

@@ -13,7 +13,7 @@ class Field
         $this->attribute = $attribute;
     }
 
-    public function renderInput(): string
+    public function renderInput()
     {
         $value = htmlspecialchars($this->model->{$this->attribute} ?? '', ENT_QUOTES, 'UTF-8');
         $type = in_array($this->attribute, ['password', 'confirmpassword']) ? 'password' : 'text';
@@ -21,7 +21,7 @@ class Field
         return sprintf('<input type="%s" name="%s" value="%s" class="form-control%s">', $type, $this->attribute, $value, $errorClass);
     }
 
-    public function __toString(): string
+    public function __toString()
     {
         $error = $this->model->getError($this->attribute);
         $errorClass = $this->model->hasError($this->attribute) ? ' is-invalid' : '';

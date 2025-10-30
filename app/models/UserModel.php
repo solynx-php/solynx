@@ -8,13 +8,7 @@ class UserModel extends Model
     protected array $hidden = ['password'];
     protected static string $table = 'users';
 
-
-    public static function table(): string
-    {
-        return 'users';
-    }
-
-    public function rules(): array
+    public function rules()
     {
         return [
             'username'        => [
@@ -28,7 +22,7 @@ class UserModel extends Model
         ];
     }
 
-    public function labels(): array
+    public function labels()
     {
         return [
             'username'        => 'Username',
@@ -37,7 +31,7 @@ class UserModel extends Model
         ];
     }
 
-    public function message(): array
+    public function message()
     {
         return [
             self::RULE_REQUIRED => 'The {field} field is required.',
@@ -49,7 +43,7 @@ class UserModel extends Model
         ];
     }
 
-    // public function save(): bool
+    // public function save()
     // {
     //     if (!$this->validate()) {
     //         return false;

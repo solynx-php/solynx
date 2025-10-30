@@ -10,13 +10,13 @@ class Schema {
         self::$db = $db;
     }
 
-    public static function create(string $table, callable $callback): void {
+    public static function create(string $table, callable $callback) {
         $blueprint = new Blueprint($table);
         $callback($blueprint);
         self::$db->exec($blueprint->toSql());
     }
 
-    public static function dropIfExists(string $table): void {
+    public static function dropIfExists(string $table) {
         self::$db->exec("DROP TABLE IF EXISTS {$table}");
     }
 }

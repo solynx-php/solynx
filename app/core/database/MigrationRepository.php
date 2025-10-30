@@ -13,7 +13,7 @@ class MigrationRepository
         $this->ensureTableExists();
     }
 
-    private function ensureTableExists(): void
+    private function ensureTableExists()
     {
         $this->db->exec("
             CREATE TABLE IF NOT EXISTS migrations (
@@ -25,26 +25,26 @@ class MigrationRepository
         ");
     }
 
-    public function all(): array
+    public function all()
     {
         $stmt = $this->db->query("SELECT migration, batch, migrated_at FROM migrations ORDER BY id ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function latestBatch(): int
+    public function latestBatch()
     {
         $stmt = $this->db->query("SELECT MAX(batch) as batch FROM migrations");
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($result['batch'] ?? 0);
     }
 
-    public function log(string $file, int $batch): void
+    public function log(string $file, int $batch)
     {
         $stmt = $this->db->prepare("INSERT INTO migrations (migration, batch) VALUES (?, ?)");
         $stmt->execute([$file, $batch]);
     }
 
-    public function isMigrated(string $file): bool
+    public function isMigrated(string $file)
     {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM migrations WHERE migration = ?");
         $stmt->execute([$file]);
