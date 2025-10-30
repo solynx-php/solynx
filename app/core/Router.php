@@ -18,6 +18,7 @@ class Router
     protected $response;
     protected array $routes = [];
     protected ?string $currentGroupPrefix = null;
+    protected array $currentGroupOptions = [];
 
     public function __construct($request, $response)
     {
@@ -56,12 +57,23 @@ class Router
         $this->routes['options'][$path] = $callback;
     }
 
-    public function group(string $prefix, callable $callback): void
+    public function group(array|string $attributes, callable $callback): void
     {
-        $previous = $this->currentGroupPrefix;
-        $this->currentGroupPrefix = rtrim(($previous ?? '') . '/' . ltrim($prefix, '/'), '/');
+        if (is_string($attributes)) {
+            $attributes = ['prefix' => $attributes];
+        }
+
+        $previousOptions = $this->currentGroupOptions;
+        $this->currentGroupOptions = array_merge($this->currentGroupOptions, $attributes);
+
+        $previousPrefix = $this->currentGroupPrefix;
+        $prefix = $attributes['prefix'] ?? '';
+        $this->currentGroupPrefix = rtrim(($previousPrefix ? $previousPrefix . '/' : '') . ltrim($prefix, '/'), '/');
+
         $callback($this);
-        $this->currentGroupPrefix = $previous;
+
+        $this->currentGroupPrefix = $previousPrefix;
+        $this->currentGroupOptions = $previousOptions;
     }
 
     protected function applyGroupPrefix(string $path): string
